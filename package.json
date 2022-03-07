@@ -1,0 +1,51 @@
+{
+  "name": "dragon",
+  "version": "0.4.0",
+  "description": "A tool for running sequence of larger tests",
+  "main": "dist/index.js",
+  "bin": {
+    "dragon": "dist/main.js"
+  },
+  "scripts": {
+    "clean": "rimraf lib",
+    "format": "prettier --write \"{src,test}/**/*.ts\"",
+    "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
+    "prebuild": "npm run format && npm run clean && npm run lint",
+    "build": "echo Using TypeScript && tsc --version && tsc --pretty && chmod +x dist/v2v.js",
+    "licchk": "license-check-and-add check"
+  },
+  "keywords": [
+    "fabric",
+    "testing",
+    "chaincode",
+    "cucumber"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.13",
+    "@types/js-yaml": "^4.0.5",
+    "@types/lodash": "^4.14.178",
+    "@types/node": "^17.0.17",
+    "@types/yargs": "^17.0.8",
+    "@typescript-eslint/eslint-plugin": "^5.11.0",
+    "@typescript-eslint/parser": "^5.11.0",
+    "eslint": "^8.8.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "license-check-and-add": "^4.0.3",
+    "prettier": "^2.5.1",
+    "standard-version": "^9.3.2",
+    "typescript": "^4.5.5"
+  },
+  "dependencies": {
+    "@types/source-map-support": "^0.5.4",
+    "chalk": "^5.0.0",
+    "dag-iterator": "^0.3.0",
+    "fast-safe-stringify": "^2.1.1",
+    "fs-extra": "^10.0.0",
+    "sanitize-filename": "^1.6.3",
+    "source-map-support": "^0.5.21",
+    "winston": "^3.5.1",
+    "yargs": "^17.3.1"
+  }
+}
