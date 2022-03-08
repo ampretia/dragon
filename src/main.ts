@@ -9,11 +9,14 @@ import * as fs from 'fs-extra';
 import yargs from 'yargs';
 import path = require('path');
 import { Logger } from './utils/logger';
-import * as dag from 'dag-iterator';
 import { Environment, shellcmd } from './utils/shell';
 import { emptyDirSync } from 'fs-extra';
 
 import { State, ContextCache, Context, Config } from './interfaces';
+import Graph, { NodeVisitor } from './dag/src/Graph';
+import Node, { NodeType } from './dag/src/Node';
+import { Navigable } from './dag/src/Edge';
+import _ from 'lodash';
 
 const log = Logger.getLogger('main');
 
@@ -54,9 +57,8 @@ const main = async (v2v: string, dryrun: boolean, asread: string[]) => {
 
     log.info(`Loaded config for "${config.description}"..`);
 
-
     // the run - one possible path through the nodes
-    config._runIteration = "run001";
+    config._runIteration = 'run001';
 
     log.info(`Clearing results..`);
     emptyDirSync(path.join(config._rootPath, config._runIteration, config.paths.results));
@@ -71,27 +73,58 @@ const main = async (v2v: string, dryrun: boolean, asread: string[]) => {
 
     log.info('Creating the state graph..');
     // create the DAG
-    const edges: dag.IEdge[] = [];
-    const nodes: dag.INode<State>[] = Object.entries(config.states).map(([key, value]) => {
-        if (value.followedby) {
-            value.followedby.forEach((f) => {
-                edges.push({ src: key, dst: f });
+    const graph = new Graph<State>();
+    const nodes: Node<State>[] = Object.entries(config.states).map(([key, value]) => {
+        return new Node<State>(key, value);
+    });
+    graph.addNodes(nodes);
+
+    // for each node get the 'followedBy' spec from the state and
+    // create the link in the graph
+    nodes.forEach((n: Node<State>) => {
+        const s = n.getData();
+        if (s.followedby) {
+            s.followedby.forEach((f) => {
+                graph.link(n, graph.getByAppKey(f), Navigable.Navigable);
             });
         }
-        return { name: key, data: value };
     });
 
-    const stateOrderToExecute: State[] = [];
-    dag.iterateDfs<State>(nodes, edges, (node) => {
-        stateOrderToExecute.push(node);
-    });
+    // create the unity edge matrices for the graph
+    graph.flattenToUnity();
 
-    log.info('Executing states in this order..');
-    stateOrderToExecute.map((s) => s.id + ' ' + s.description).forEach((s) => log.info(s));
+    log.info(graph.toString());
+
+    const nodeRoutes: Node<State>[][] = [];
+    let currentRoute: Node<State>[] = [];
+
+    const visitor: NodeVisitor<State> = (node: Node<State>) => {
+        currentRoute.push(node);
+        if (node.type() === NodeType.END) {
+            nodeRoutes.push(_.cloneDeep(currentRoute));
+            currentRoute = [];
+        }
+
+        return true;
+    };
+
+    graph.visit(visitor);
+
+    log.info('Executing in this order..');
+    let routeIteration = 0;
+    nodeRoutes.forEach((route) => {
+        const routeIterationName = `route_${routeIteration}`;
+        log.info(`Route "${routeIterationName}"`);
+        routeIteration++;
+        for (const node of route) {
+            const state: State = node.getData();
+            log.info(`${state.id}::${state.description}`);
+        }
+    });
 
     // execute each state
-    for (const state of stateOrderToExecute) {
-        await executeState(state, dryrun || asread.includes(state.id));
+    for (const node of nodeRoutes[0]) {
+        await executeState(node.getData(), dryrun || asread.includes(node.getData().id));
     }
 };
 
@@ -113,7 +146,12 @@ const executeState = async (s: State, dryrun: boolean) => {
             try {
                 const env: Environment = { CONTEXT_PATH: ctx, STATIC_CONFIG: s.staticconfig };
                 const stdout: string[] = await shellcmd(cmd, env);
-                const newCtx = path.join(config._rootPath, config._runIteration, config.paths.results, `${s.context}_post_${s.id}`);
+                const newCtx = path.join(
+                    config._rootPath,
+                    config._runIteration,
+                    config.paths.results,
+                    `${s.context}_post_${s.id}`,
+                );
                 await fs.copy(ctx, newCtx);
 
                 const logFile = path.join(config._rootPath, config._runIteration, config.paths.results, `${s.id}.log`);
@@ -134,7 +172,7 @@ const executeState = async (s: State, dryrun: boolean) => {
 const contexts = async (config: Config) => {
     const contextRoot = path.join(config._rootPath, config._runIteration, config.paths.contexts);
     // if the directory doesn't exist create
-     // if it does and clean is true remove contents
+    // if it does and clean is true remove contents
 
     config.contexts.forEach((ctx: Context) => {
         const ctxPath = path.join(contextRoot, ctx.id);

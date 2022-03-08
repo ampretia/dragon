@@ -9,12 +9,14 @@ export enum NodeType {
 export default class Node<T> {
     private data: T;
     private _id: string;
+    private _appKey: string;
 
     private incoming = 0;
     private outgoing = 0;
 
-    public constructor(data: T) {
+    public constructor(appKey: string, data: T) {
         this.data = data;
+        this._appKey = appKey;
         this._id = new ShortUniqueId({
             dictionary: 'hex', // the default
         })();
@@ -30,6 +32,10 @@ export default class Node<T> {
 
     public id(): string {
         return this._id;
+    }
+
+    public appKey(): string {
+        return this._appKey;
     }
 
     public addIncoming(): void {
