@@ -1,5 +1,5 @@
 {
-  "name": "dragon",
+  "name": "@ampretia/dragon",
   "version": "0.4.0",
   "description": "A tool for running sequence of larger tests",
   "main": "dist/index.js",
