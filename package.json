@@ -12,7 +12,8 @@
     "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
     "prebuild": "npm run clean && npm run format && npm run lint",
     "build": "echo Using TypeScript && tsc --version && tsc --pretty && chmod +x dist/main.js",
-    "licchk": "license-check-and-add check"
+    "licchk": "license-check-and-add check",
+    "test":"echo coming.... "
   },
   "keywords": [
     "fabric",
@@ -50,6 +51,5 @@
     "@types/lodash": "^4.14.179",
     "lodash": "^4.17.21",
     "short-unique-id": "^4.4.4"
-
   }
 }
