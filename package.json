@@ -10,8 +10,8 @@
     "clean": "rimraf lib",
     "format": "prettier --write \"{src,test}/**/*.ts\"",
     "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
-    "prebuild": "npm run format && npm run clean && npm run lint",
-    "build": "echo Using TypeScript && tsc --version && tsc --pretty && chmod +x dist/v2v.js",
+    "prebuild": "npm run clean && npm run format && npm run lint",
+    "build": "echo Using TypeScript && tsc --version && tsc --pretty && chmod +x dist/main.js",
     "licchk": "license-check-and-add check"
   },
   "keywords": [

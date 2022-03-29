@@ -40,6 +40,7 @@ export interface Paths {
     states: string;
     contexts: string;
     results: string;
+    configs: string;
 }
 
 export interface ContextCache {

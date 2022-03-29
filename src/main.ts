@@ -142,9 +142,11 @@ const executeState = async (s: State, dryrun: boolean) => {
         log.info(`CONTEXT_PATH=${ctx}`);
         log.info(`${cmd}`);
 
+        const staticCfgPath = path.join(config._rootPath, config.paths.configs, s.staticconfig);
+
         if (!dryrun) {
             try {
-                const env: Environment = { CONTEXT_PATH: ctx, STATIC_CONFIG: s.staticconfig };
+                const env: Environment = { CONTEXT_PATH: ctx, STATIC_CONFIG: staticCfgPath };
                 const stdout: string[] = await shellcmd(cmd, env);
                 const newCtx = path.join(
                     config._rootPath,
